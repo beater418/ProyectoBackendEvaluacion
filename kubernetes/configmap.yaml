@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: backend-config
+  namespace: evaluacion
+
+data:
+  MY_DATABASE_DRIVER: "postgres"
+  DB_HOST: "postgres-service"
+  DB_USER_NAME: "admin"
+  DB_NAME: "database"
+  DB_PORT: "5432"
