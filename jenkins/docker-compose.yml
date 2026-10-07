@@ -1,0 +1,64 @@
+services:
+
+  postgres:
+
+    image: postgres:16-alpine
+
+    container_name: postgres_jenkins
+
+    restart: unless-stopped
+
+    environment:
+
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: database
+
+    volumes:
+
+      - postgres_jenkins_data:/var/lib/postgresql/data
+
+      - ../data/postgres_data.sql:/docker-entrypoint-initdb.d/postgres_data.sql
+
+    healthcheck:
+
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d database
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  backend:
+
+    image: dantito/proyecto-backend:latest
+
+    container_name: backend_jenkins
+
+    restart: unless-stopped
+
+    ports:
+
+      - "3000:3000"
+
+    environment:
+
+      MY_DATABASE_DRIVER: postgres
+      DB_HOST: postgres
+      DB_USER_NAME: admin
+      DB_PASSWORD: admin123
+      DB_NAME: database
+      DB_PORT: 5432
+
+    depends_on:
+
+      postgres:
+
+        condition: service_healthy
+
+
+volumes:
+
+  postgres_jenkins_data:
