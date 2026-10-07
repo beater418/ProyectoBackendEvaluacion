@@ -4,6 +4,14 @@ pipeline {
 
     agent any
 
+    parameters {
+        string(
+            name: 'SERVER_IP',
+            defaultValue: '167.71.153.34',
+            description: 'IP publica del servidor DigitalOcean creado con Terraform'
+        )
+    }
+
     environment {
         IMAGE = 'dantito/proyecto-backend'
     }
@@ -14,6 +22,18 @@ pipeline {
             steps {
                 echo 'Descargando proyecto desde GitHub'
                 checkout scm
+            }
+        }
+
+        stage('Validar servidor') {
+            steps {
+                script {
+                    if (!params.SERVER_IP?.trim()) {
+                        error('Debes ingresar SERVER_IP')
+                    }
+
+                    echo "Servidor destino: ${params.SERVER_IP}"
+                }
             }
         }
 
@@ -32,19 +52,18 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy Cloud') {
             steps {
                 script {
-                    deployBackend()
+                    deployBackend(params.SERVER_IP)
                 }
             }
         }
 
-        stage('Verify') {
+        stage('Verify Cloud') {
             steps {
-                sh 'sleep 10'
-                sh 'docker ps'
-                sh 'curl -f http://host.docker.internal:3000/'
+                sh 'sleep 15'
+                sh "curl -f http://${params.SERVER_IP}:3000/"
             }
         }
     }
@@ -52,11 +71,11 @@ pipeline {
     post {
 
         success {
-            echo 'Pipeline ejecutado correctamente'
+            echo 'Pipeline cloud ejecutado correctamente'
         }
 
         failure {
-            echo 'Pipeline fallo'
+            echo 'Pipeline cloud fallo'
         }
     }
 }
