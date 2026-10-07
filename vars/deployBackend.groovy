@@ -13,9 +13,15 @@ def call(String serverIp) {
         ]) {
 
             sh '''
+                CLEAN_KEY=$(mktemp)
+
+                tr -d '\\r' < "$SSH_KEY" > "$CLEAN_KEY"
+
+                chmod 600 "$CLEAN_KEY"
+
                 ssh \
                   -o StrictHostKeyChecking=no \
-                  -i "$SSH_KEY" \
+                  -i "$CLEAN_KEY" \
                   "$SSH_USER@$CLOUD_SERVER_IP" \
                   "if [ ! -d /opt/ProyectoBackendEvaluacion/.git ]; then
                        git clone --branch jenkins https://github.com/beater418/ProyectoBackendEvaluacion.git /opt/ProyectoBackendEvaluacion;
@@ -29,6 +35,12 @@ def call(String serverIp) {
                    docker compose -f jenkins/docker-compose.yml pull &&
                    docker compose -f jenkins/docker-compose.yml up -d --build &&
                    docker compose -f jenkins/docker-compose.yml ps"
+
+                RESULT=$?
+
+                rm -f "$CLEAN_KEY"
+
+                exit $RESULT
             '''
         }
     }
