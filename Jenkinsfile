@@ -44,7 +44,7 @@ pipeline {
             steps {
                 sh 'sleep 10'
                 sh 'docker ps'
-                sh 'curl -f http://localhost:3000/'
+                sh 'curl -f http://host.docker.internal:3000/'
             }
         }
     }
