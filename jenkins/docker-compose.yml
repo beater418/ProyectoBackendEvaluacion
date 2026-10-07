@@ -1,27 +1,23 @@
+name: proyecto-backend-jenkins
+
 services:
 
   postgres:
 
-    image: postgres:16-alpine
+    build:
+      context: ..
+      dockerfile: jenkins/postgres.Dockerfile
 
     container_name: postgres_jenkins
 
     restart: unless-stopped
 
     environment:
-
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
       POSTGRES_DB: database
 
-    volumes:
-
-      - postgres_jenkins_data:/var/lib/postgresql/data
-
-      - ../data/postgres_data.sql:/docker-entrypoint-initdb.d/postgres_data.sql
-
     healthcheck:
-
       test:
         - CMD-SHELL
         - pg_isready -U admin -d database
@@ -29,6 +25,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+    volumes:
+      - postgres_jenkins_data:/var/lib/postgresql/data
 
 
   backend:
@@ -40,11 +39,9 @@ services:
     restart: unless-stopped
 
     ports:
-
       - "3000:3000"
 
     environment:
-
       MY_DATABASE_DRIVER: postgres
       DB_HOST: postgres
       DB_USER_NAME: admin
@@ -55,7 +52,6 @@ services:
     depends_on:
 
       postgres:
-
         condition: service_healthy
 
 

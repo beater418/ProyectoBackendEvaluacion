@@ -1,33 +1,36 @@
+@Library('devops-shared-library') _
 pipeline {
     agent any
-    stages {
+    environment {
+        IMAGE = 'dantito/proyecto-backend'
+    }stages {
         stage('Checkout') {
             steps {
                 echo 'Descargando proyecto desde GitHub'
                 checkout scm
             }
-        }stage('Verificar archivos') {
+        }stage('Verificar Docker') {
             steps {
-                echo 'Listando archivos del proyecto'
-                sh 'ls -la'
+                sh 'docker --version'
+                sh 'docker compose version'
             }
-        }stage('Construir imagen') {
+        }stage('Build and Push') {
             steps {
-                echo 'Construyendo imagen Docker'
-                sh 'docker build -t dantito/proyecto-backend:latest .'
+                script {
+                    dockerBuildPush(env.IMAGE)
+                }
             }
-        }stage('Desplegar') {
+        }stage('Deploy') {
             steps {
-                echo 'Levantando proyecto con Docker Compose'
-                sh '''
-                    docker compose -f jenkins/docker-compose.yml down || true
-                    docker compose -f jenkins/docker-compose.yml up -d
-                '''
+                script {
+                    deployBackend()
+                }
             }
-        }stage('Verificar') {
+        }stage('Verify') {
             steps {
-                echo 'Verificando contenedores'
+                sh 'sleep 10'
                 sh 'docker ps'
+                sh 'curl -f http://localhost:3000/'
             }
         }
     }post {
